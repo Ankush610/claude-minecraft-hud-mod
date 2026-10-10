@@ -1,5 +1,5 @@
 {
   "name": "minecraft-hud",
-  "owner": { "name": "ankushss" },
+  "owner": { "name": "Ankush610" },
   "plugins": [{ "name": "minecraft-hud", "source": "./" }]
 }

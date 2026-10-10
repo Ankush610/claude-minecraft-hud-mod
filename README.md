@@ -2,11 +2,7 @@
 
 A Claude Code mod that shows your usage as a Minecraft HUD above the prompt.
 
-![minecraft-hud above the Claude Code prompt in Ghostty](assets/screenshot.png)
-
-Close-up of the pixel art:
-
-![HUD close-up](assets/preview.png)
+![preview](assets/preview.png)
 
 | HUD | Shows |
 | --- | --- |
@@ -22,7 +18,7 @@ elsewhere it shows a one-line text summary. Health and food need a Claude subscr
 In a Claude Code terminal session:
 
 ```
-/plugin install minecraft-hud --marketplace <owner>/minecraft-hud
+/plugin install minecraft-hud --marketplace Ankush610/claude-minecraft-hud-mod
 ```
 
 Answer `y` to add the marketplace, then press Enter for the user scope.
