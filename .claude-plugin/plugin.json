@@ -1,0 +1,1 @@
+{ "name": "minecraft-hud", "version": "0.1.0", "description": "Minecraft-style HUD: context as XP, 5h session limit as health, weekly limit as food", "types": "./types/index.d.ts" }
