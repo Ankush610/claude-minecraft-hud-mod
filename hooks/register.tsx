@@ -2,7 +2,7 @@ import { atom, read, update } from 'claude-code'
 import type { Register, SessionMeasureInput } from 'claude-code'
 
 import type { Hud } from '../types'
-import { H, PAD_TOP, SCALE, W, paint, upscale } from './hud'
+import { H, PAD_TOP, SCALE, W, barSvg, paint, resetIn, upscale } from './hud'
 
 const hud = atom({ plugin: 'minecraft-hud', key: 'hud' } as const, {
   contextPct: null,
@@ -11,11 +11,17 @@ const hud = atom({ plugin: 'minecraft-hud', key: 'hud' } as const, {
 } as Hud)
 const isHidden = atom({ plugin: 'minecraft-hud', key: 'isHidden' } as const, false)
 
-const toHud = (u: Pick<SessionMeasureInput, 'context' | 'rateLimits'>): Hud => ({
-  contextPct: u.context.percent ?? null,
-  sessionUsed: u.rateLimits.find(r => r.kind === 'five_hour')?.percentUsed ?? null,
-  weeklyUsed: u.rateLimits.find(r => r.kind === 'seven_day')?.percentUsed ?? null,
-})
+const toHud = (u: Pick<SessionMeasureInput, 'context' | 'rateLimits'>): Hud => {
+  const five = u.rateLimits.find(r => r.kind === 'five_hour')
+  const week = u.rateLimits.find(r => r.kind === 'seven_day')
+  return {
+    contextPct: u.context.percent ?? null,
+    sessionUsed: five?.percentUsed ?? null,
+    weeklyUsed: week?.percentUsed ?? null,
+    sessionResetsAt: five?.resetsAt ?? null,
+    weeklyResetsAt: week?.resetsAt ?? null,
+  }
+}
 
 // Terminal cell height / width, measured on Ghostty's default font. Off, and the
 // HUD leaves a gap below it (too high) or gets clipped (too low).
@@ -51,9 +57,37 @@ export const register: Register = on => {
     const pct = (n: number | null) => (n === null ? '?' : `${Math.round(n)}%`)
     const alt = `health ${pct(s.sessionUsed === null ? null : 100 - s.sessionUsed)} · xp ${pct(s.contextPct)} · food ${pct(s.weeklyUsed === null ? null : 100 - s.weeklyUsed)}`
 
+    // Desktop and other graphical surfaces: plain usage meters in Claude's style.
+    // Context is left out: the desktop sidebar already shows it.
     if (e.surface !== 'terminal') {
-      const { Text } = $.ui.resolve(e)
-      return <Text>{alt}</Text>
+      const { Box, Svg, Text } = $.ui.resolve(e)
+      const used = (n: number | null) => (n === null ? '?' : `${Math.round(n)}%`)
+      // ponytail: reset times are as fresh as the last redraw; add a $.clock tick if they drift noticeably.
+      const now = await $.clock.now()
+      // One row per limit, 5h on top: usage | bar | time to reset.
+      const meter = (label: string, pct: number | null, resetsAt: string | null | undefined) => (
+        // Fixed, non-shrinking side columns so both bars get the same width.
+        <Box key={label} flexDirection="row" alignItems="center" gap={1}>
+          <Box width={5} flexShrink={0} justifyContent="flex-end">
+            <Text wrap="truncate">{used(pct)}</Text>
+          </Box>
+          {/* flex: 1 1 0 with min-width 0: the bar takes whatever the side columns
+              leave, growing and shrinking with the window. */}
+          <Box width={0} minWidth={0} flexGrow={1} flexShrink={1}>
+            <Svg source={barSvg(pct ?? 0)} alt={`${label} ${used(pct)} used`} height={8} />
+          </Box>
+          <Box width={8} flexShrink={0}>
+            <Text dimColor wrap="truncate">{resetsAt ? resetIn(Date.parse(resetsAt) - now) : ''}</Text>
+          </Box>
+        </Box>
+      )
+      // No border of its own: the desktop already draws the band in a card.
+      return (
+        <Box flexDirection="column" flexGrow={1} minWidth={0}>
+          {meter('5h', s.sessionUsed, s.sessionResetsAt)}
+          {meter('Week', s.weeklyUsed, s.weeklyResetsAt)}
+        </Box>
+      )
     }
 
     const { Box, Image } = $.ui.resolve(e)

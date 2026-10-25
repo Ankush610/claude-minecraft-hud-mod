@@ -1,5 +1,5 @@
 import { test, expect } from 'claude-code/testing'
-import { H, W, icons, paint, xpCells } from './hud'
+import { H, W, barSvg, icons, paint, resetIn, xpCells } from './hud'
 
 const rgb = (px: Uint8Array, x: number, y: number) => {
   const i = (y * W + x) * 4
@@ -41,5 +41,26 @@ test('band draws an Image, and /hud toggles it', async ($, on) => {
   expect(await ui.find({ type: 'Image' })).toBeUndefined()
   await $.command.run(HUD_CMD)
   expect(await ui.find({ type: 'Image' })).toBeDefined()
+  await ui.unmount()
+})
+
+test('desktop draws plain 5h and week meters, no Minecraft Image', async ($, on) => {
+  on('ui.render', ($, e) => $.ui.resolve(e).Box({}))
+  on('clock.now', () => ({ value: 0 }))
+  const ui = await $.ui.mount({
+    plugin: 'minecraft-hud',
+    surface: 'desktop',
+    component: 'AbovePrompt',
+    props: { hasSurvey: false, isWorking: false, maxRows: 10, bodyColumns: 120, scroll: { offset: 0, bodyRows: 10 }, view: {} },
+  })
+  const svg = await ui.find({ type: 'Svg' })
+  expect(svg).toBeDefined()
+  expect(await ui.find({ type: 'Image' })).toBeUndefined()
+  expect(barSvg(50)).toContain('width="50%"')
+  expect(barSvg(80)).toContain('#c98a1e')
+  expect(barSvg(150)).toContain('width="100%" height="8" fill="#c93c3c"') // clamped, red
+  expect(resetIn(45 * 60_000)).toBe('45 min')
+  expect(resetIn(150 * 60_000)).toBe('2 hr')
+  expect(resetIn(30 * 3600_000)).toBe('1 day')
   await ui.unmount()
 })

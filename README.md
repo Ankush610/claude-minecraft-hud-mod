@@ -10,8 +10,11 @@ A Claude Code mod that shows your usage as a Minecraft HUD above the prompt.
 | 🍗 Food | Weekly limit remaining |
 | 🟩 XP bar + level | Context window used (%) |
 
-Drawn as real pixels on terminals with the kitty graphics protocol (Ghostty, kitty);
-elsewhere it shows a one-line text summary. Health and food need a Claude subscription.
+Drawn as real pixels on terminals with the kitty graphics protocol (Ghostty, kitty).
+In the Claude desktop app (and VS Code, mobile) it switches to two plain progress
+bars, 5-hour and weekly usage with time to reset, that stretch with the window;
+context is left out there since the desktop sidebar already shows it.
+Health, food and the usage bars need a Claude subscription.
 
 ## Install
 

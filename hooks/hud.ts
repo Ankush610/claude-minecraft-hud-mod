@@ -137,3 +137,18 @@ export const upscale = (px: Uint8Array, s = SCALE): Uint8Array => {
     }
   return out
 }
+
+// Desktop meter, Bootstrap-progress style: a pill track with a green fill clipped to
+// it, amber from 75%, red from 90%. No viewBox and widths in %, so drawn at any width
+// it lays out afresh instead of stretching: the rounded ends stay round.
+export const barSvg = (pct: number): string => {
+  const used = Math.max(0, Math.min(100, pct))
+  const fill = used >= 90 ? '#c93c3c' : used >= 75 ? '#c98a1e' : '#4e8a1a'
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="8"><clipPath id="pill"><rect width="100%" height="8" rx="4"/></clipPath><g clip-path="url(#pill)"><rect width="100%" height="8" fill="#8888884d"/><rect width="${used}%" height="8" fill="${fill}"/></g></svg>`
+}
+
+// Coarse time to reset, as the meter's right column shows it: "45 min", "2 hr", "1 day".
+export const resetIn = (ms: number) => {
+  const m = Math.max(0, Math.round(ms / 60_000))
+  return m >= 1440 ? `${Math.floor(m / 1440)} day` : m >= 60 ? `${Math.floor(m / 60)} hr` : `${m} min`
+}
